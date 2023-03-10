@@ -4,7 +4,6 @@
 
 #include <stdexcept>
 #include <ostream>
-#include <iostream>
 
 
 template<typename T>
@@ -13,10 +12,8 @@ struct Node
 	T value;
 	Node<T>* next;
 
-	Node() : value{}, next{ nullptr } { std::cout << "create\n"; }
-	Node(T val, Node<T>* nxt = nullptr) : value{ val }, next{ nxt } { std::cout << "create\n"; }
-
-	~Node() { std::cout << "delete\n"; }
+	Node() : value{}, next{ nullptr } {}
+	Node(T val, Node<T>* nxt = nullptr) : value{ val }, next{ nxt } {}
 };
 
 
