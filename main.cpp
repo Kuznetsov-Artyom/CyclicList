@@ -12,39 +12,26 @@ void printList(const List<T>& list)
 
 int main(int argc, char* argv[])
 {
-	List<std::string> list;
+	List<int> list;
+
+	for (int i = 0; i < 5; ++i)
+		list.push_back(i + 1);
+
+
+	List<int> listTwo;
+
+	for (int i = 0; i < 3; ++i)
+		listTwo.push_back(i + 1);
 
 	printList(list);
-
-	list.push_back("12333");
-	list.push_back("lelle");
-	list.push_back("123");
-	list.push_back("00030030333");
-
-	if (list.find("123"))
-		std::cout << "TRUE\n";
-
-
-	
-
-	printList(list);
-
-	list.pop_back();
-
-	printList(list);
-
-	list.push_front("100");
-
-	printList(list);
-
-	list.pop_front();
-
-	printList(list);
-
-	List<std::string> listTwo(list);
-
 	printList(listTwo);
 
+	listTwo = list;
+
+	printList(list);
+	printList(listTwo);
+
+	std::cout << "\n\n";
 
 
 
