@@ -4,6 +4,9 @@
 
 #include <stdexcept>
 #include <ostream>
+#include <vector>
+#include <algorithm>
+#include <functional>
 
 
 template<typename T>
@@ -52,7 +55,7 @@ public:
 	ConstIterator(Node<T>* node = nullptr) : curNode{ node } {}
 
 	const T& operator * () { return curNode->value; }
-	Node<T>* operator -> () { return curNode; }
+	const Node<T>* operator -> () { return curNode; }
 
 	ConstIterator<T>& operator ++ ();
 	ConstIterator<T> operator ++ (int);
@@ -116,9 +119,14 @@ public:
 	void push_front(T value);
 	void pop_front();
 
+	void insert_before_if(T value, std::function<bool(T, T)> func);
+	void insert_after_if(T value, std::function<bool(T, T)> func);
+
+	void remove_nodes_if(std::function<bool(T)> func);
+	void erase(size_t pos);
 
 	bool empty() const noexcept { return mHead->next == nullptr; }
-	bool find(T value) const noexcept;
+	bool find(const T& value) const noexcept;
 	void clear();
 
 
@@ -262,6 +270,7 @@ inline void List<T>::push_back(T value)
 	if (empty())
 	{
 		mHead->next = mTail = newNode;
+		newNode->next = mHead;
 	}
 	else
 	{
@@ -275,6 +284,14 @@ template<typename T>
 inline void List<T>::pop_back()
 {
 	throwExceptionIfEmpty();
+
+	if (mHead->next == mTail)
+	{
+		delete mTail;
+		mHead->next = mTail = nullptr;
+		mSize = 0;
+		return;
+	}
 
 	Node<T>* newBackNode = begin() + (mSize - 2);
 	mTail = newBackNode;
@@ -294,6 +311,7 @@ inline void List<T>::push_front(T value)
 	if (empty())
 	{
 		mHead->next = mTail = newNode;
+		newNode->next = mHead;
 	}
 	else
 	{
@@ -307,6 +325,14 @@ inline void List<T>::pop_front()
 {
 	throwExceptionIfEmpty();
 
+	if (mHead->next == mTail)
+	{
+		delete mTail;
+		mHead->next = mTail = nullptr;
+		mSize = 0;
+		return;
+	}
+
 	Node<T>* newFrontNode = begin() + 1;
 
 	delete mHead->next;
@@ -316,7 +342,129 @@ inline void List<T>::pop_front()
 }
 
 template<typename T>
-inline bool List<T>::find(T value) const noexcept
+inline void List<T>::insert_before_if(T value, std::function<bool(T, T)> func)
+{
+	Node<T>* newNode = new Node<T>(value);
+	++mSize;
+
+	if (empty())
+	{
+		mHead->next = mTail = newNode;
+		newNode->next = mHead;
+		return;
+	}
+
+	Node<T>* lastNode = mHead;
+
+	for (auto it = begin(); it != end(); ++it)
+	{
+		if (func(value, *it))
+		{
+			lastNode->next = newNode;
+			newNode->next = it;
+			return;
+		}
+
+		lastNode = it;
+	}
+
+	lastNode->next = newNode;
+	newNode->next = mHead;
+	mTail = newNode;
+}
+
+template<typename T>
+inline void List<T>::insert_after_if(T value, std::function<bool(T, T)> func)
+{
+	Node<T>* newNode = new Node<T>(value);
+	++mSize;
+
+	if (empty())
+	{
+		mHead->next = mTail = newNode;
+		newNode->next = mHead;
+		return;
+	}
+
+	Node<T>* lastNode = mHead;
+
+	for (auto it = begin(); it != end(); ++it)
+	{
+		if (func(value, *it))
+		{
+			if (it->next == mHead) mTail = newNode;
+
+			newNode->next = it->next;
+			it->next = newNode;
+			return;
+		}
+
+		lastNode = it;
+	}
+
+	lastNode->next = newNode;
+	newNode->next = mHead;
+	mTail = newNode;
+}
+
+template<typename T>
+inline void List<T>::remove_nodes_if(std::function<bool(T)> func)
+{
+	throwExceptionIfEmpty();
+
+	size_t index = 0;
+
+	for (auto it = begin(); it != end();)
+	{
+		if (func(*it))
+		{
+			++it;
+			erase(index);
+		}
+		else
+		{
+			++it;
+			++index;
+		}
+	}
+}
+
+template<typename T>
+inline void List<T>::erase(size_t pos)
+{
+	throwExceptionIfEmpty();
+
+	if (pos >= mSize)
+		throw std::out_of_range{ "out_of_range" };
+
+	if (pos == mSize - 1)
+	{
+		pop_back();
+		return;
+	}
+
+	Node<T>* lastNode = mHead;
+	size_t index = 0;
+
+	for (auto it = begin(); it != end(); ++it)
+	{
+		if (index == pos)
+		{
+			lastNode->next = it->next;
+
+			Node<T>* delNode = it;
+			delete delNode;
+			--mSize;
+			return;
+		}
+
+		lastNode = it;
+		++index;
+	}
+}
+
+template<typename T>
+inline bool List<T>::find(const T& value) const noexcept
 {
 	if (empty()) return false;
 
